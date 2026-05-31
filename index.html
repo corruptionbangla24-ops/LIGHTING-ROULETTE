@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>LIGHTNING ROULETTE - 24/7 GLOBAL LIVE</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 🎰 ক্যাসিনো হেডার প্যানেল (ডাইস-৩ডি স্ট্যান্ডার্ডে নিখুঁত গ্লোবাল ব্যালেন্স লক ভাই) -->
+    <div class="header">
+        <div class="brand">
+            <div class="name">LIGHTNING ROULETTE</div>
+            <div class="game">24/7 MULTIPLAYER LIVE SESSION</div>
+        </div>
+        <div class="header-right">
+            <button class="sound-btn" id="mute-btn" onclick="toggleMute()">🔊</button>
+            <div class="balance-box">৳ <span id="user-balance">0.00</span></div>
+        </div>
+    </div>
+
+    <!-- ⏳ গ্লোবাল লাইভ কাউন্টডাউন টাইমার ও স্টেট ডিসপ্লে জোন ভাই ভাই -->
+    <div class="global-timer-container">
+        <div class="timer-status-title" id="game-state-label">BETTING TIME OPEN</div>
+        <div class="timer-countdown-clock" id="timer-clock">20</div>
+    </div>
+
+    <!-- 🎡 থ্রিডি স্পিনিং রুলেট হুইল চাকা উইন্ডো ফ্রেম ভাই ভাই -->
+    <div class="roulette-wheel-zone">
+        <div class="wheel-outer-frame" id="roulette-wheel-node">
+            <div class="wheel-ball-indicator" id="wheel-ball">🔮</div>
+            <div class="wheel-center-hub">⚡</div>
+        </div>
+    </div>
+
+    <!-- 🏆 ইন-লাইন লাইভ স্কোরিং ও লাইটেনিং বজ্রপাত ডিসপ্লে বার -->
+    <div class="win-status-container" id="win-status-box">
+        <span id="win-text-msg">বোর্ডের যেকোনো নাম্বারে ক্লিক করে আপনার চিপ বাজি প্লে করুন ভাই!</span>
+    </div>
+
+    <!-- 🔢 ০ থেকে ৩৬ ঘরের লাক্সারি ক্যাসিনো চিপ প্লে প্যানেল গ্রিড বোর্ড ভাই ভাই -->
+    <div class="roulette-board-container">
+        <div class="roulette-grid-board">
+            <!-- ০ নম্বর স্পেশাল গ্রিন বক্স লক ভাই -->
+            <div class="grid-num-tile num-green" onclick="selectBoardNumberAction(0)" id="tile-0">0</div>
+            
+            <!-- ১ থেকে ৩৬ ঘরের ডাইনামিক রেন্ডারিং গ্রিড লুপ মেকানিজম -->
+            <div class="main-numbers-wrapper" id="numbers-grid-injector">
+                <!-- JavaScript automatically populates 1-36 nodes safely -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎛️ কন্ট্রোল প্যানেল এরিয়া (৳৫০-৳২০০০0 চিপস প্লাস-মাইনাস ও বাজি লক বাটন) -->
+    <div class="footer-controls">
+        <div class="play-section">
+            <div class="bet-selector">
+                <button class="bet-btn-nav" onclick="adjustChipValue('minus')">−</button>
+                <div style="text-align: center; width: 80px;">
+                    <div style="font-size: 9px; color: #aaa; font-weight: bold;">CHIP VALUE</div>
+                    <div style="font-size: 15px; font-weight: 900; color: #fff;" id="bet-display">৳৫০</div>
+                </div>
+                <button class="bet-btn-nav" onclick="adjustChipValue('plus')">+</button>
+            </div>
+
+            <div class="selected-number-display">
+                <div style="font-size: 9px; color: #aaa;">SELECTED</div>
+                <div style="font-size: 18px; font-weight: 900; color: #f1c40f;" id="target-display">NONE</div>
+            </div>
+
+            <button class="play-btn" id="spin-btn" onclick="handlePlaceLiveBetTransaction()">PLACE BET</button>
+        </div>
+    </div>
+
+    <!-- 🔌 [উইনগো কালার ট্রেড সিঙ্ক - ইউনিভার্সাল সকেট ইঞ্জিন লাইব্রেরি ভাই] -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlUserId = urlParams.get('userId') || urlParams.get('id') || urlParams.get('username') || "guest_user";
+        const urlWallet = urlParams.get('wallet') || "main";
+        
+        const SERVER_URL = window.location.origin;
+
+        let balance = 0.00;
+        let currentChipBet = 50; 
+        let selectedNumber = null;
+        let isMuted = false;
+        let serverCurrentState = "BETTING";
+
+        // ওরিজিনাল রুলেট রেড এবং ব্ল্যাক ঘরের আন্তর্জাতিক কালার ম্যাপিং ইন্টিগ্রেশন চাবি
+        const redNumbersArray = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+
+        // ১ থেকে ৩৬ ঘরের গ্রিড বোর্ড ওয়ান-শটে চমৎকার ইনজেক্ট করা ভাই ভাই
+        function buildLiveRouletteLayoutGrid() {
+            const container = document.getElementById("numbers-grid-injector");
+            let htmlBuffer = "";
+            for (let i = 1; i <= 36; i++) {
+                let colorClass = redNumbersArray.includes(i) ? "num-red" : "num-black";
+                htmlBuffer += `<div class="grid-num-tile ${colorClass}" onclick="selectBoardNumberAction(${i})" id="tile-${i}">${i}</div>`;
+            }
+            container.innerHTML = htmlBuffer;
+        }
+
+        // প্লেয়ার যখন বোর্ডে টাচ করে ঘর সিলেক্ট করবে
+        function selectBoardNumberAction(num) {
+            if (serverCurrentState !== "BETTING") return;
+            selectedNumber = num;
+            document.getElementById("target-display").innerText = num;
+            
+            // পূর্ববর্তী সিলেক্টেড ক্লাস সাফ করে নতুন ঘরে বর্ডার গ্লো পুশ ভাই ভাই
+            document.querySelectorAll(".grid-num-tile").forEach(el => el.classList.remove("tile-selected-active"));
+            document.getElementById(`tile-${num}`).classList.add("tile-selected-active");
+            playAudio('click');
+        }
+
+        
+        // 🔌 গ্লোবাল লাইভ সকেট ইন্টারসেপ্টর ও কাউন্টডাউন টাইমার ইঞ্জিন ভাই ভাই
+        if (typeof io !== 'undefined') {
+            const socket = io();
+
+            // ১. প্লেয়ার যখনই বোর্ডে ঢুকবে, কারেন্ট লাইভ স্টেট ও টাইমার ওয়ান-শটে সিঙ্ক হয়ে যাবে!
+            socket.on("syncInitialState", (data) => {
+                if (data) {
+                    serverCurrentState = data.state;
+                    updateLiveUIStateLabels(data.state, data.time);
+                }
+            });
+
+            // ২. প্রতি সেকেন্ডের তাজা গ্লোবাল কাউন্টডাউন টাইমার রিয়েল-টাইম রেন্ডারিং
+            socket.on("timeTick", (data) => {
+                if (data) {
+                    serverCurrentState = data.state;
+                    document.getElementById("timer-clock").innerText = data.time;
+                    updateLiveUIStateLabels(data.state, data.time);
+                }
+            });
+
+            // ৩. গ্লোবাল গেম স্টেট চেঞ্জ লুপ (স্পিনিং এবং লাইভ বজ্রপাত ফায়ার অ্যাকশন)
+            socket.on("gameStateChange", (data) => {
+                if (data) {
+                    serverCurrentState = data.state;
+                    
+                    if (data.state === "SPINNING") {
+                        // চাকা ঘোরার ফাস্ট ৩ডি এনিমেশন ক্লাস ট্র্রিগার লক ভাই ভাই
+                        document.getElementById("roulette-wheel-node").className = "wheel-outer-frame wheel-blur-spinning-fast";
+                        document.getElementById("win-status-box").className = "win-status-container";
+                        document.getElementById("win-text-msg").innerText = "⚡ চাকা ঘুরছে... আকাশ থেকে লাইটেনিং বজ্রপাত আঘাত হানছে!!";
+                        playAudio('spin');
+                    }
+                    else if (data.state === "RESULT" && data.result) {
+                        // চাকা থামানো এবং ফাইনাল লাইভ সেটেলমেন্ট অ্যানিমেশন
+                        document.getElementById("roulette-wheel-node").className = "wheel-outer-frame";
+                        triggerLightningGlowFlash(data.result.winningNumber, data.result.lightningHits, data.result.winAmount);
+                    }
+                    else if (data.state === "BETTING") {
+                        // নতুন ফ্রেশ রাউন্ড ওপেন, সব ওল্ড সিলেকশন ক্লিয়ার
+                        selectedNumber = null;
+                        document.getElementById("target-display").innerText = "NONE";
+                        document.getElementById("win-status-box").className = "win-status-container";
+                        document.getElementById("win-text-msg").innerText = "বোর্ডের যেকোনো নাম্বারে ক্লিক করে আপনার চিপ বাজি প্লে করুন ভাই!";
+                        document.querySelectorAll(".grid-num-tile").forEach(el => el.classList.remove("tile-selected-active", "lightning-bolt-hit"));
+                    }
+                }
+            });
+
+            // ৪. লাইভ অ্যাকাউন্ট ব্যালেন্স ইউনিভার্সাল সিঙ্ক লুপ
+            socket.on("balanceUpdate", (data) => {
+                if (data && data.username === urlUserId) {
+                    fetchLiveBalance();
+                }
+            });
+        }
+
+        // লাইভ টেক্সট লেবেল ও কন্ট্রোল বোতাম লক বর্ম ভাই ভাই
+        function updateLiveUIStateLabels(state, time) {
+            const label = document.getElementById("game-state-label");
+            const spinBtn = document.getElementById("spin-btn");
+            
+            if (state === "BETTING") {
+                label.innerText = "BETTING TIME OPEN";
+                label.style.color = "#00ffcc";
+                spinBtn.disabled = false;
+            } else if (state === "SPINNING") {
+                label.innerText = "WHEEL SPINNING...";
+                label.style.color = "#ffaa00";
+                spinBtn.disabled = true;
+            } else {
+                label.innerText = "ROUND RESULT";
+                label.style.color = "#ff3333";
+                spinBtn.disabled = true;
+            }
+        }
+
+        // 🛫 লাইভ বোর্ডে বাজি ধরার ডেডিকেটেড সকেট-সিঙ্ক গেটওয়ে রাউট
+        async function handlePlaceLiveBetTransaction() {
+            if (serverCurrentState !== "BETTING") {
+                alert("🚨 রাউন্ড ক্লোজ ভাই! পরবর্তী ফ্রেশ লাইভ রাউন্ডের জন্য অপেক্ষা করুন।");
+                return;
+            }
+            if (selectedNumber === null) {
+                alert("❌ আগে বোর্ডের যেকোনো একটি লাকি নম্বর সিলেক্ট করুন ভাই ভাই!");
+                return;
+            }
+
+            document.getElementById("spin-btn").disabled = true;
+            playAudio('click');
+
+            try {
+                const response = await fetch(`${SERVER_URL}/api/roulette-place-bet`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: urlUserId,
+                        betAmount: parseFloat(currentChipBet),
+                        betOnNumber: selectedNumber,
+                        wallet: urlWallet
+                    })
+                });
+
+                const data = await response.json();
+                if (data && data.success === true) {
+                    balance = parseFloat(data.balance);
+                    document.getElementById("user-balance").innerText = balance.toFixed(2);
+                    document.getElementById("win-text-msg").innerText = `🎯 বাজি লকড! নম্বর: ${selectedNumber} [৳${currentChipBet}]`;
+                    if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+                } else {
+                    alert(data.message || "❌ Database Decline!");
+                    document.getElementById("spin-btn").disabled = false;
+                }
+            } catch (err) {
+                alert("⚠️ সেশন আউট! আবার বাজি প্লে করুন ভাই ভাই।");
+                document.getElementById("spin-btn").disabled = false;
+            }
+        }
+
+        // ⚡ বজ্রপাত আঘাত এবং ফাইনাল রিওয়ার্ড ফ্লাশ লজিক
+        function triggerLightningGlowFlash(winNum, lightningHits, winAmount) {
+            playAudio('wheel');
+            
+            // যদি বজ্রপাত আঘাত করা কোনো নম্বর উইন হয়, বোর্ডে সেই নম্বরে কড়া নিয়ন ফ্লাশ ক্লাস পুশ
+            Object.keys(lightningHits).forEach(num => {
+                const tile = document.getElementById(`tile-${num}`);
+                if (tile) tile.classList.add("lightning-bolt-hit");
+            });
+
+            const msgBox = document.getElementById("win-status-box");
+            const textMsg = document.getElementById("win-text-msg");
+            
+            let isLuckyHit = lightningHits[winNum] ? `⚡ LIGHTNING HIT x${lightningHits[winNum]}!!` : "";
+            msgBox.className = "win-status-container win-glow-bar";
+            textMsg.innerText = `🏆 উইনিং নম্বর: ${winNum}! ${isLuckyHit}`;
+
+            fetchLiveBalance();
+        }
+
+        async function fetchLiveBalance() {
+            try {
+                const response = await fetch(`${SERVER_URL}/api/roulette-balance?userId=${urlUserId}&wallet=${urlWallet}`);
+                const data = await response.json();
+                if (data && data.success) {
+                    balance = parseFloat(data.balance);
+                    document.getElementById("user-balance").innerText = balance.toFixed(2);
+                }
+            } catch (e) { console.error("Balance pass"); }
+        }
+
+        window.onload = () => {
+            if (window.parent) window.parent.postMessage({ action: "refresh_wallet" }, "*");
+            fetchLiveBalance();
+        };
+
+        // 🎛️ চিপস প্লাস-মাইনাস নব নেভিগেটর মেকানিক্স
+        function adjustChipValue(action) {
+            if (serverCurrentState !== "BETTING") return;
+            if (action === 'minus' && currentChipBet > 50) {
+                if (currentChipBet <= 500) currentChipBet -= 50;
+                else if (currentChipBet <= 2000) currentChipBet -= 200;
+                else currentChipBet -= 1000;
+            }
+            if (action === 'plus' && currentChipBet < 20000) {
+                if (currentChipBet < 500) currentChipBet += 50;
+                else if (currentChipBet < 2000) currentChipBet += 200;
+                else currentChipBet += 1000;
+            }
+            if (currentChipBet < 50) currentChipBet = 50;
+            if (currentChipBet > 20000) currentChipBet = 20000;
+            
+            document.getElementById("bet-display").innerText = `৳${currentChipBet}`;
+            playAudio('click');
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            document.getElementById("mute-btn").innerText = isMuted ? "🔇" : "🔊";
+            Object.values(slotSounds).forEach(s => s.muted = isMuted);
+        }
+
+        // 🎯 [৪টি ওরিজিনাল প্রফেশনাল স্লট সাউন্ড ও বাফার গেটওয়ে লক ভাই ভাই]
+        const slotSounds = {
+            click: new Audio('click2.mp3'),
+            spin: new Audio('spin2.mp3'), 
+            win: new Audio('win2.mp3'),
+            wheel: new Audio('wheel1.mp3')
+        };
+        Object.values(slotSounds).forEach(s => s.load());
+
+        function playAudio(type) { 
+            if (isMuted) return; 
+            try { 
+                slotSounds[type].currentTime = 0; 
+                slotSounds[type].play(); 
+            } catch(e){} 
+        }
+
+        buildLiveRouletteLayoutGrid();
+    </script>
+</body>
+</html>
